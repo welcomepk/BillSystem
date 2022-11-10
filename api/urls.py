@@ -15,6 +15,9 @@ def getRoutes(request):
     routes = [
         '/api/account/login/',
         '/api/account/login/refresh/',
+
+        '/api/app/sell/'
+        '/api/app/purchase/'
     ]
     return Response(routes)
 
@@ -25,6 +28,9 @@ urlpatterns = [
 
     # account app (signup, login)
     path('account/', include('account.urls')),
+
+    # main app
+    path('app/', include('app.urls')),
 
     # tokens
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
