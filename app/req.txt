@@ -1,7 +1,7 @@
  => selling 
- => invice table (filter, add, update)
- => produts list (filter, update, delete ) // done (add remaining)
- => pagination for cutomer-list and 
+ => invice table (filter, add, update) 
+ => produts list (filter, update ) done
+ => pagination for cutomer-list and
 
  ----Report
 return data(total parchase, total sale, Gold sale, Silver sale) by date(default -> current date)

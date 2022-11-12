@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from .models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -7,8 +7,19 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics
 from .serializer import UserSerializer, RegisterSerializer
 from rest_framework import status
+from rest_framework.decorators import api_view
 
 
+@api_view(['GET'])
+def is_exists(request):
+    email = request.GET.get("email")
+    try:
+        user = User.objects.get(email = email)
+        print(user)
+        return Response({"msg" : "user already exists with this email address"})
+    except User.DoesNotExist:
+        return Response({"error" : "user does not exists"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response("good to go with verify user")
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -23,7 +34,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
-
 
 class SignUpView(APIView):
     permission_classes = (AllowAny,)

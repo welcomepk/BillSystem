@@ -43,7 +43,7 @@ class User(AbstractUser):
 
 class Customer(models.Model):
     
-    shop = models.ForeignKey(User, related_name = "customres", on_delete=models.CASCADE)
+    shop = models.ForeignKey(User, related_name = "customers", on_delete=models.CASCADE)
     full_name = models.CharField(max_length = 128)
     email = models.EmailField(unique = True)
     phone_no = models.CharField(max_length = 14)

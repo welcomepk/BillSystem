@@ -70,4 +70,14 @@ class Silver(models.Model):
 
 
 class Sell(models.Model):
-    customer = models.ForeignKey(Customer,   related_name='sells', on_delete = models.CASCADE)
+    shop = models.ForeignKey(User, related_name = 'sells', on_delete = models.CASCADE)
+    customer = models.ForeignKey(Customer,   related_name='buys', on_delete = models.CASCADE)
+    gold_items = models.JSONField(default = '{}')
+    silver_items = models.JSONField(default = '{}')
+    total_amount = models.FloatField()
+    paid_amount = models.FloatField()
+    gst = models.FloatField()
+    timestamp = models.DateTimeField(auto_now_add = True)
+
+    def __str__(self):
+        return f"from {self.shop} to {self.customer.full_name}"

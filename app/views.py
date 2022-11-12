@@ -1,4 +1,4 @@
-
+from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -10,11 +10,6 @@ from account.models import User, Customer
 from django.db.models.lookups import GreaterThan, LessThan
 from django.db.models import F, Q, When
 
-class SellingApiView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        return Response(request.data)
 
 
 class PurchaseProductApiView(APIView):
@@ -173,7 +168,7 @@ class CustomerSearchApiView(APIView):
             customers = Customer.objects.filter(shop = shop)
             print("q =>", q, customers)
             if q:
-                customers = customers.filter(Q(full_name__icontains=q) & Q(email__icontains=q))
+                customers = customers.filter(Q(full_name__icontains=q) | Q(email__icontains=q))
                 customers_serializer = CustomerSerializer(customers, many=True)
             else:
                 customers_serializer = CustomerSerializer(customers, many=True)
@@ -260,7 +255,6 @@ class ProductsApiView(APIView):
                 save_silver.save()
             
         return Response({"msg" : "items are saved successfully"}, status=status.HTTP_201_CREATED)
-
 
     def patch(self, request, pk, format = None):
         item_type = request.GET.get('type')
@@ -351,3 +345,47 @@ class ProductSearchApiView(APIView):
             return Response({"msg" : f"{q} {item_type}"})
         except User.DoesNotExist:
             return Response({"error" : "User does not exists"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SellingApiView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            shop = User.objects.get(id = request.user.id)
+            customer = shop.customers.get(id = request.data.get("shop"))
+
+            gold_items = request.data.get("gold_items")
+            silver_items = request.data.get("silver_items")
+            
+            for gold_item in gold_items:
+                try:
+                    gold = shop.gold_items.get(id = gold_item.get('id'))
+                    if int(gold_item['qty']) > gold.qty:
+                        return Response({"error" : f"quantity({gold_item['qty']}) is larger than available stocks in GOLD items for id={gold_item.get('id')}"}, status=status.HTTP_400_BAD_REQUEST)
+                except Gold.DoesNotExist:
+                    return Response({"error" : f"Gold item not found with this id({gold_item.get('id')})"}, status=status.HTTP_400_BAD_REQUEST)
+        
+            for silver_item in silver_items:
+                try:
+                    silver = shop.silver_items.get(id = silver_item.get('id'))
+                    if int(silver_item['qty']) > silver.qty:
+                        return Response({"error" : f"quantity({silver_item['qty']}) is larger than available stocks in SILVER items for id={silver_item.get('id')}"}, status=status.HTTP_400_BAD_REQUEST)
+                except Silver.DoesNotExist:
+                    return Response({"error" : f"Silver item not found with this id({silver_item.get('id')})"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # next save all minus qty and save items
+            # create Serializer for Selling
+            # varify serializer at start of the code ()
+            # save serializer if valid
+            
+            selling_serializer = None
+
+        except Silver.DoesNotExist:
+            return Response({"error" : "Does not found this silver item"}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response({"error" : "This buisness account is not active or exists."}, status=status.HTTP_400_BAD_REQUEST)
+        except Customer.DoesNotExist:
+            return Response({"error" : "Customer does not exists"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(request.data)

@@ -14,6 +14,4 @@ urlpatterns = [
     path('products/<int:pk>/', ProductsApiView.as_view(), name="product_details"),
     # path('customers/search/', ProductsSearchApiView.as_view(), name="customer_serach"),
     path('products/search/', ProductSearchApiView.as_view(), name="product_serach"),
-   
-
 ]
