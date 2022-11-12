@@ -1,5 +1,5 @@
 from django.db import models
-from account.models import User
+from account.models import User, Customer
 
 
 class PurchasedBy(models.Model):
@@ -19,6 +19,13 @@ class Gold(models.Model):
     parchased_by = models.ForeignKey(
         PurchasedBy,
         related_name='gold_items',
+        on_delete=models.CASCADE,
+        blank = True,
+        null = True
+    )
+    shop = models.ForeignKey(
+        User, 
+        related_name = 'gold_items',
         on_delete=models.CASCADE
     )
     item_name = models.CharField(max_length = 128)
@@ -29,9 +36,10 @@ class Gold(models.Model):
     stone_wt = models.FloatField( blank = True, null = True)
     fine_wt = models.FloatField( blank = True, null = True)
     price = models.FloatField()
-    
+    qty = models.IntegerField()
+
     def __str__(self):
-        return f"Invoice {self.parchased_by} {self.item_name}"
+        return f"shop {self.shop} {self.item_name}"
 
 
 
@@ -39,6 +47,13 @@ class Silver(models.Model):
     parchased_by = models.ForeignKey(
         PurchasedBy,
         related_name='silver_items',
+        on_delete=models.CASCADE,
+        blank = True,
+        null = True
+    )
+    shop = models.ForeignKey(
+        User, 
+        related_name = 'silver_items',
         on_delete=models.CASCADE
     )
     item_name = models.CharField(max_length = 128)
@@ -48,6 +63,11 @@ class Silver(models.Model):
     stone_wt = models.FloatField( blank = True, null = True)
     fine_wt = models.FloatField( blank = True, null = True)
     price = models.FloatField()
+    qty = models.IntegerField()
     
     def __str__(self):
-        return f"{self.item_name} {self.price}"
+        return f"shop {self.shop} {self.item_name}"
+
+
+class Sell(models.Model):
+    customer = models.ForeignKey(Customer,   related_name='sells', on_delete = models.CASCADE)

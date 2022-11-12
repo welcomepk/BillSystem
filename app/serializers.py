@@ -35,3 +35,10 @@ class InvoiceSerializer(ModelSerializer):
             'gold_items',
             'silver_items',
            )
+
+
+# class ProductsSerializer(ModelSerializer):  
+#   gold_items = GoldSerializer(many=True, read_only=True)
+#   silver_items = SilverSerializer(many=True, read_only=True)
+#   class Meta:
+#     model = 

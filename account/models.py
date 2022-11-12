@@ -36,6 +36,10 @@ class User(AbstractUser):
 
     REQUIRED_FIELDS =  []
 
+    @property
+    def get_silver_items(self):
+       return self.silver.all()
+
 
 class Customer(models.Model):
     
