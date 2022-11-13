@@ -19,7 +19,7 @@ def is_exists(request):
         return Response({"msg" : "user already exists with this email address"})
     except User.DoesNotExist:
         return Response({"error" : "user does not exists"}, status=status.HTTP_400_BAD_REQUEST)
-    return Response("good to go with verify user")
+
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -32,8 +32,12 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         return token
 
+
+
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
+
 
 class SignUpView(APIView):
     permission_classes = (AllowAny,)

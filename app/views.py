@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import GoldSerializer, InvoiceSerializer, SilverSerializer, PurchasedBySerializer
+from .serializers import SellingSerializer, GoldSerializer, InvoiceSerializer, SilverSerializer, PurchasedBySerializer
 from account.serializer import CustomerSerializer
 from .models import Gold, Silver, PurchasedBy
 from account.models import User, Customer
@@ -353,34 +353,48 @@ class SellingApiView(APIView):
     def post(self, request):
         try:
             shop = User.objects.get(id = request.user.id)
-            customer = shop.customers.get(id = request.data.get("shop"))
+            customer = shop.customers.get(id = request.data.get("customer"))
 
             gold_items = request.data.get("gold_items")
             silver_items = request.data.get("silver_items")
+            yet_to_save = []
             
-            for gold_item in gold_items:
-                try:
-                    gold = shop.gold_items.get(id = gold_item.get('id'))
-                    if int(gold_item['qty']) > gold.qty:
-                        return Response({"error" : f"quantity({gold_item['qty']}) is larger than available stocks in GOLD items for id={gold_item.get('id')}"}, status=status.HTTP_400_BAD_REQUEST)
-                except Gold.DoesNotExist:
-                    return Response({"error" : f"Gold item not found with this id({gold_item.get('id')})"}, status=status.HTTP_400_BAD_REQUEST)
-        
-            for silver_item in silver_items:
-                try:
-                    silver = shop.silver_items.get(id = silver_item.get('id'))
-                    if int(silver_item['qty']) > silver.qty:
-                        return Response({"error" : f"quantity({silver_item['qty']}) is larger than available stocks in SILVER items for id={silver_item.get('id')}"}, status=status.HTTP_400_BAD_REQUEST)
-                except Silver.DoesNotExist:
-                    return Response({"error" : f"Silver item not found with this id({silver_item.get('id')})"}, status=status.HTTP_400_BAD_REQUEST)
-
-            # next save all minus qty and save items
-            # create Serializer for Selling
-            # varify serializer at start of the code ()
-            # save serializer if valid
             
-            selling_serializer = None
+            request.data['shop'] = request.user.id
+            selling_serializer = SellingSerializer(data = request.data)
+            
+            if selling_serializer.is_valid():
 
+                for gold_item in gold_items:
+                    try:
+                        gold = shop.gold_items.get(id = gold_item.get('id'))
+                        if int(gold_item['qty']) > gold.qty:
+                            return Response({"error" : f"quantity({gold_item['qty']}) is larger than available stocks in GOLD items for id={gold_item.get('id')}"}, status=status.HTTP_400_BAD_REQUEST)
+                        gold.qty = gold.qty - gold_item['qty']
+                        yet_to_save.append(gold)
+                    except Gold.DoesNotExist:
+                        return Response({"error" : f"Gold item not found with this id({gold_item.get('id')})"}, status=status.HTTP_400_BAD_REQUEST)
+            
+                for silver_item in silver_items:
+                    try:
+                        silver = shop.silver_items.get(id = silver_item.get('id'))
+                        if int(silver_item['qty']) > silver.qty:
+                            return Response({"error" : f"quantity({silver_item['qty']}) is larger than available stocks in SILVER items for id={silver_item.get('id')}"}, status=status.HTTP_400_BAD_REQUEST)
+                        silver.qty = silver.qty - silver_item['qty']
+                        yet_to_save.append(silver)
+
+                    except Silver.DoesNotExist:
+                        return Response({"error" : f"Silver item not found with this id({silver_item.get('id')})"}, status=status.HTTP_400_BAD_REQUEST)
+
+                # updates all existing jwelleries with qty
+                for item in yet_to_save:
+                    item.save()
+                
+                selling_serializer.save()
+                return Response(selling_serializer.data)
+            else:
+                return Response(selling_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
         except Silver.DoesNotExist:
             return Response({"error" : "Does not found this silver item"}, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:

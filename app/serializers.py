@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from .models import Gold, Silver, PurchasedBy
+from .models import Gold, Silver, PurchasedBy, Sell
 from account.serializer import UserSerializer
 
 class GoldSerializer(ModelSerializer):
@@ -36,9 +36,16 @@ class InvoiceSerializer(ModelSerializer):
             'silver_items',
            )
 
+class SellingSerializer(ModelSerializer):
+
+    class Meta:
+        model = Sell
+        fields = '__all__'
+
 
 # class ProductsSerializer(ModelSerializer):  
 #   gold_items = GoldSerializer(many=True, read_only=True)
 #   silver_items = SilverSerializer(many=True, read_only=True)
 #   class Meta:
 #     model = 
+

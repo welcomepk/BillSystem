@@ -5,3 +5,4 @@ from .models import *
 admin.site.register(Gold)
 admin.site.register(Silver)
 admin.site.register(PurchasedBy)
+admin.site.register(Sell)

@@ -3,7 +3,7 @@ from account.models import User, Customer
 
 
 class PurchasedBy(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name = 'purchases',on_delete=models.CASCADE)
     seller_name = models.CharField(max_length = 128)
     total_amount = models.FloatField()  
     paid_amount = models.FloatField()  
@@ -69,6 +69,7 @@ class Silver(models.Model):
         return f"shop {self.shop} {self.item_name}"
 
 
+
 class Sell(models.Model):
     shop = models.ForeignKey(User, related_name = 'sells', on_delete = models.CASCADE)
     customer = models.ForeignKey(Customer,   related_name='buys', on_delete = models.CASCADE)
@@ -81,3 +82,9 @@ class Sell(models.Model):
 
     def __str__(self):
         return f"from {self.shop} to {self.customer.full_name}"
+
+
+# class SellHistory(models.Model):
+#     shop_name = models.CharField(max_length = 128)
+#     customer_name = models.CharField(max_length = 128)
+#     timestamp = models.DateTimeField(auto_now = True)
