@@ -1,6 +1,8 @@
 from django.db import models
 from account.models import User, Customer
-
+from django.utils import timezone
+from django.dispatch import receiver #add this
+from django.db.models.signals import post_save #add this
 
 class PurchasedBy(models.Model):
     user = models.ForeignKey(User, related_name = 'purchases',on_delete=models.CASCADE)
@@ -8,7 +10,9 @@ class PurchasedBy(models.Model):
     total_amount = models.FloatField()  
     paid_amount = models.FloatField()  
     gst = models.FloatField()
-    purchased_date = models.DateField(auto_now_add = True, blank = True, null = True)
+    # purchased_date = models.DateField(auto_now_add = True, blank = True, null = True)
+    # timestamp = models.DateTimeField(auto_now_add = True)
+    created_at = models.DateTimeField()
 
     def __str__(self):
         return f"{self.id} => {self.user.first_name} {self.purchased_date}"
@@ -78,18 +82,27 @@ class Sell(models.Model):
     total_amount = models.FloatField()
     paid_amount = models.FloatField()
     gst = models.FloatField()
-    timestamp = models.DateTimeField(auto_now_add = True)
+    created_at = models.DateTimeField()
 
     def __str__(self):
         return f"from {self.shop} to {self.customer.full_name}"
 
+
 class GoldSilverRate(models.Model):
-    user = models.OneToOneField(User, on_delete = models.CASCADE)
-    gold_price = models.FloatField()
-    silver_price = models.FloatField()
+    user = models.OneToOneField(User, on_delete = models.CASCADE, related_name = "goldsilverrates")
+    gold_price = models.FloatField(default = 0.0)
+    silver_price = models.FloatField(default = 0.0)
 
     def __str__(self):
         return f"{self.user} => G-{self.gold_price}  S-{self.silver_price}"
+
+    @receiver(post_save, sender=User) #add this
+    def create_user_rates(sender, instance, created, **kwargs):
+
+        if created:
+            GoldSilverRate.objects.create(user=instance)
+
+
 # class SellHistory(models.Model):
 #     shop_name = models.CharField(max_length = 128)
 #     customer_name = models.CharField(max_length = 128)

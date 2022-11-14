@@ -9,7 +9,7 @@ from .models import Gold, Silver, PurchasedBy, Sell, GoldSilverRate
 from account.models import User, Customer
 from django.db.models.lookups import GreaterThan, LessThan
 from django.db.models import F, Q, When
-
+from datetime import datetime
 
 class GoldSilverRateApiView(APIView):
     permission_classes = [IsAuthenticated]
@@ -23,14 +23,29 @@ class GoldSilverRateApiView(APIView):
             return Response({"error" : "Item with this user does not exists"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"error" : "some techincal problem"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    def patch(self, request):
+    # def post(self, request, format = None):
+    #     print("------------- IN POST ---------------")
+    #     request.data['user'] = request.user
+    #     serializer = GoldSilverRateSerializer(data = request.data)
+    #     if serializer.is_valid():
+    #         serializer.save();
+    #         return Response(serializer.data)
+    #     else:
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = GoldSilverRateSerializer(request.user.goldsilverrate, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
+
+    def patch(self, request, format = None):
+        print("------------- IN PATCH ---------------")
+
+        if GoldSilverRate.objects.filter(user = request.user).exists():
+            serializer = GoldSilverRateSerializer(request.user.goldsilverrates, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error" : "No rates found"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PurchaseProductApiView(APIView):
@@ -50,6 +65,7 @@ class PurchaseProductApiView(APIView):
             'total_amount': request.data.get('total_amount'),
             'gst': request.data.get('gst'),
             'paid_amount': request.data.get('paid_amount'),
+            'created_at': datetime.fromtimestamp(int(request.data.get('timestamp'))),
         }
         
         purchased_serializer = PurchasedBySerializer(data=purchased_data)
@@ -96,6 +112,7 @@ class PurchaseProductApiView(APIView):
 
 class SellInvoiceApiView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request, format = None):
         invice_no = request.GET.get('invice_no')
         if invice_no:
@@ -415,6 +432,8 @@ class SellingApiView(APIView):
             
             
             request.data['shop'] = request.user.id
+            request.data['created_at'] = datetime.fromtimestamp(int(request.data.get('timestamp')))
+            # request.data.pop('timestamp')
             selling_serializer = SellingSerializer(data = request.data)
             
             if selling_serializer.is_valid():
@@ -422,6 +441,8 @@ class SellingApiView(APIView):
                 for gold_item in gold_items:
                     try:
                         gold = shop.gold_items.get(id = gold_item.get('id'))
+                        if gold.qty <= 0:
+                            return Response({"error" : f"Stock of this item has been empty"}, status=status.HTTP_400_BAD_REQUEST)
                         if int(gold_item['qty']) > gold.qty:
                             return Response({"error" : f"quantity({gold_item['qty']}) is larger than available stocks in GOLD items for id={gold_item.get('id')}"}, status=status.HTTP_400_BAD_REQUEST)
                         gold.qty = gold.qty - gold_item['qty']
@@ -432,6 +453,9 @@ class SellingApiView(APIView):
                 for silver_item in silver_items:
                     try:
                         silver = shop.silver_items.get(id = silver_item.get('id'))
+                        if silver.qty <= 0:
+                            return Response({"error" : f"Stock of this item has been empty"}, status=status.HTTP_400_BAD_REQUEST)
+                        
                         if int(silver_item['qty']) > silver.qty:
                             return Response({"error" : f"quantity({silver_item['qty']}) is larger than available stocks in SILVER items for id={silver_item.get('id')}"}, status=status.HTTP_400_BAD_REQUEST)
                         silver.qty = silver.qty - silver_item['qty']

@@ -69,6 +69,8 @@ class InvoiceSerializer(ModelSerializer):
         fields = (
             'user',
             'total_amount',
+            'paid_amount',
+            'created_at',
             'gold_items',
             'silver_items',
            )

@@ -9,6 +9,7 @@ from .serializers import UserSerializer, RegisterSerializer, RequestPaswordReset
 from rest_framework import status, generics
 from rest_framework.decorators import api_view
 from .helpers import send_forget_password_mail
+from app.models import GoldSilverRate
 
 def check_user_exists(email):
     if User.objects.filter(email = email).exists():
@@ -27,6 +28,12 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
 
+        gold_price = ''
+        silver_price = ''
+        
+        if GoldSilverRate.objects.filter(user = user).exists():
+           gold_price = user.goldsilverrate.gold_price
+           silver_price =  user.goldsilverrate.gold_price
         # Add custom claims
         token['payload'] = {
             "profile" : {
@@ -34,15 +41,12 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
                 "shop_name" : user.shop_name,
                 "phone_no" : user.phone_no,
             },
-            "gold_price" : user.goldsilverrate.gold_price,
-            "silver_price" : user.goldsilverrate.gold_price,
-
+            "gold_price" : gold_price,
+            "silver_price" : silver_price,
         }
         # ...
 
         return token
-
-
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
