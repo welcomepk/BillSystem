@@ -83,7 +83,13 @@ class Sell(models.Model):
     def __str__(self):
         return f"from {self.shop} to {self.customer.full_name}"
 
+class GoldSilverRate(models.Model):
+    user = models.OneToOneField(User, on_delete = models.CASCADE)
+    gold_price = models.FloatField()
+    silver_price = models.FloatField()
 
+    def __str__(self):
+        return f"{self.user} => G-{self.gold_price}  S-{self.silver_price}"
 # class SellHistory(models.Model):
 #     shop_name = models.CharField(max_length = 128)
 #     customer_name = models.CharField(max_length = 128)

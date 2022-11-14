@@ -1,9 +1,9 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 from .models import User, Customer
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 class UserSerializer(ModelSerializer):
   class Meta:
@@ -75,7 +75,20 @@ class RegisterSerializer(ModelSerializer):
 
 
 class CustomerSerializer(ModelSerializer):
+    class Meta:
+      model = Customer
+      fields = "__all__"
 
-  class Meta:
-    model = Customer
-    fields = "__all__"
+
+class RequestPaswordResetEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField(min_length = 10)
+
+    class Meta:
+      fields = ['email']
+
+    def validate(self, attrs):
+        email = attrs.get('email', '')
+        if User.objects.filter(email = email).exists():
+          return super().validate(attrs)
+        else:
+          raise serializers.ValidationError("Invalid email address")

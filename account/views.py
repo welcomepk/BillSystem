@@ -5,21 +5,22 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics
-from .serializer import UserSerializer, RegisterSerializer
-from rest_framework import status
+from .serializers import UserSerializer, RegisterSerializer, RequestPaswordResetEmailSerializer
+from rest_framework import status, generics
 from rest_framework.decorators import api_view
+from .helpers import send_forget_password_mail
 
+def check_user_exists(email):
+    if User.objects.filter(email = email).exists():
+        return True
+    return False
 
 @api_view(['GET'])
 def is_exists(request):
     email = request.GET.get("email")
-    try:
-        user = User.objects.get(email = email)
-        print(user)
+    if check_user_exists(email):
         return Response({"msg" : "user already exists with this email address"})
-    except User.DoesNotExist:
-        return Response({"error" : "user does not exists"}, status=status.HTTP_400_BAD_REQUEST)
-
+    return Response({"error" : "user does not exists"}, status=status.HTTP_400_BAD_REQUEST)
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -27,7 +28,16 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
 
         # Add custom claims
-        token['email'] = user.email
+        token['payload'] = {
+            "profile" : {
+                "email" : user.email,
+                "shop_name" : user.shop_name,
+                "phone_no" : user.phone_no,
+            },
+            "gold_price" : user.goldsilverrate.gold_price,
+            "silver_price" : user.goldsilverrate.gold_price,
+
+        }
         # ...
 
         return token
@@ -53,6 +63,23 @@ class SignUpView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class RequestPaswordResetEmail(generics.GenericAPIView):
+    serializer_class = RequestPaswordResetEmailSerializer
+
+    def post(self, request):
+        print("user id ", request.user)
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = request.data.get('email')
+        status = send_forget_password_mail("kamblepk020@gmail.com")
+        if status:
+            return Response(f'Good to go {email} successfully sent')
+        else:
+            return Response({"error" : "mail can not be sent"}, status=status.HTTP_400_BAD_REQUEST)
+            
+
+        
 # class SignUpView(generics.CreateAPIView):
 #   permission_classes = (AllowAny,)
 #   serializer_class = RegisterSerializer

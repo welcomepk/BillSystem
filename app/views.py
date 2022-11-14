@@ -3,13 +3,34 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import SellingSerializer, GoldSerializer, InvoiceSerializer, SilverSerializer, PurchasedBySerializer
-from account.serializer import CustomerSerializer
-from .models import Gold, Silver, PurchasedBy
+from .serializers import *
+from account.serializers import CustomerSerializer
+from .models import Gold, Silver, PurchasedBy, Sell, GoldSilverRate
 from account.models import User, Customer
 from django.db.models.lookups import GreaterThan, LessThan
 from django.db.models import F, Q, When
 
+
+class GoldSilverRateApiView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            prices = GoldSilverRate.objects.get(user = request.user)
+            serializer = GoldSilverRateSerializer(prices)
+            return Response(serializer.data)
+        except GoldSilverRate.DoesNotExist:
+            return Response({"error" : "Item with this user does not exists"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error" : "some techincal problem"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def patch(self, request):
+
+        serializer = GoldSilverRateSerializer(request.user.goldsilverrate, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PurchaseProductApiView(APIView):
@@ -73,8 +94,42 @@ class PurchaseProductApiView(APIView):
         return Response('good to go')
 
 
+class SellInvoiceApiView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, format = None):
+        invice_no = request.GET.get('invice_no')
+        if invice_no:
+            try:
+                sell_obj = Sell.objects.get(id = invice_no)
+                # gold_items = []
+                # silver_items = []
+                
+                # for gold_item in sell_obj.gold_items:
+                #     item = request.user.gold_items.filter(id = gold_item.get('id')).first()
+                #     item.qty = gold_item.get('qty')
+                #     gold_items.append(GoldItemDescSerializer(item).data)
+                # for silver_item in sell_obj.silver_items:
+                #     item = request.user.silver_items.filter(id = silver_item.get('id')).first()
+                #     item.qty = silver_item.get('qty')
+                #     silver_items.append(SilverItemDescSerializer(item).data)
+                
+                # context = {
+                #     "desc" : SellInvoiceSerializer(sell_obj).data,
+                #     "gold_items" : gold_items,
+                #     "silver_items" : silver_items
+                # }
+
+                return Response(SellingSerializer(sell_obj).data)
+            except Sell.DoesNotExist:
+                return Response({"error": "Invalid invice no"}, status=status.HTTP_400_BAD_REQUEST)
+            except:
+                return Response({'error' : "unknown error"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response('plz provide invice_no', status=status.HTTP_400_BAD_REQUEST)
+
+
 # Note: invice_no => purchsed_by id(acts as invice_no)
-class InvoiceApiView(APIView):
+class PurchaseInvoiceApiView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, format = None):
@@ -280,8 +335,6 @@ class ProductsApiView(APIView):
             return Response({"error": "gold item does not exists"}, status=status.HTTP_400_BAD_REQUEST)
         except:
             return Response({"error": "unkwon error while updating product"}, status=status.HTTP_400_BAD_REQUEST)
-
-
     # def delete(self, request, pk = None, format = None):
 
     #     item_type = request.GET.get('type')
@@ -300,6 +353,7 @@ class ProductsApiView(APIView):
     #     except:
     #         return Response({'error' : "unknown error while getting product details"}, status=status.HTTP_400_BAD_REQUEST)
             
+
 class ProductSearchApiView(APIView):
 
     def get(self, request, format = None):
