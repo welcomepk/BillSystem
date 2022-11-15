@@ -11,6 +11,20 @@ from rest_framework.decorators import api_view
 from .helpers import send_forget_password_mail
 from app.models import GoldSilverRate
 
+class UserDetails(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk, format = None):
+        
+        try:
+            user = User.objects.get(id = pk)
+            serializer = UserSerializer(user)
+            return Response(serializer.data)
+        except User.DoesNotExist:
+            return Response({"error" : "user does not exists or invalid id"}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
 def check_user_exists(email):
     if User.objects.filter(email = email).exists():
         return True
@@ -32,8 +46,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         silver_price = ''
         
         if GoldSilverRate.objects.filter(user = user).exists():
-           gold_price = user.goldsilverrate.gold_price
-           silver_price =  user.goldsilverrate.gold_price
+           gold_price = user.goldsilverrates.gold_price
+           silver_price =  user.goldsilverrates.gold_price
         # Add custom claims
         token['payload'] = {
             "profile" : {

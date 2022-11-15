@@ -5,10 +5,11 @@ from django.contrib.auth.password_validation import validate_password
 from .models import User, Customer
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
+
 class UserSerializer(ModelSerializer):
   class Meta:
     model = User
-    fields = ["id", "first_name", "last_name", "email"]
+    fields = ["id", "first_name", "last_name", "email", "shop_name", "phone_no", "address", "date_joined" ]
 
 
 #Serializer to Register User

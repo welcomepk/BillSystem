@@ -32,6 +32,9 @@ urlpatterns = [
     # main app
     path('app/', include('app.urls')),
 
+    # payments
+    path('razorpay/', include("payments.urls")),
+
     # tokens
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
