@@ -467,7 +467,6 @@ class InvoiceApiView(APIView):
             return Response(invoices)
 
 
-
 class SellInvoiceApiView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -520,3 +519,17 @@ class PurchaseInvoiceApiView(APIView):
         else:
             return Response('plz provide invice_no', status=status.HTTP_400_BAD_REQUEST)
 
+class CustomerInvoiceApiView(APIView):
+
+    def post(self, request, format = None):
+        customer_id = request.data.get('id', None)
+        if customer_id:
+            try:
+                customer = Customer.objects.get(id = customer_id)
+                customer_buys = customer.buys.all()
+                serializer = SellingSerializer(customer_buys, many=True)
+                return Response(serializer.data)
+            except Customer.DoesNotExist:
+                return Response({"error":"customer does not exists"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"error":"id fields is required"}, status=status.HTTP_400_BAD_REQUEST)
