@@ -10,6 +10,8 @@ class PurchasedBy(models.Model):
     total_amount = models.FloatField()  
     paid_amount = models.FloatField()  
     gst = models.FloatField()
+    golditems = models.JSONField(default = '{}')
+    silveritems = models.JSONField(default = '{}')
     # purchased_date = models.DateField(auto_now_add = True, blank = True, null = True)
     # timestamp = models.DateTimeField(auto_now_add = True)
     created_at = models.DateTimeField()
@@ -45,8 +47,6 @@ class Gold(models.Model):
     def __str__(self):
         return f"shop {self.shop} {self.item_name}"
 
-
-
 class Silver(models.Model):
     parchased_by = models.ForeignKey(
         PurchasedBy,
@@ -71,7 +71,6 @@ class Silver(models.Model):
     
     def __str__(self):
         return f"shop {self.shop} {self.item_name}"
-
 
 
 class Sell(models.Model):

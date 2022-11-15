@@ -13,14 +13,20 @@ class Order(models.Model):
     def __str__(self):
         return self.order_product
 
-# class Membership(models.Model):
-#     user = models.OneToOneField(User, related_name = "membership", on_delete=models.CASCADE)
-#     membership_type = models.CharField(max_length=100)
-#     membership_amount = models.CharField(max_length=25)
-#     membership_payment_id = models.CharField(max_length=100)
-#     isPaid = models.BooleanField(default=False)
-#     membership_order_date = models.DateTimeField(auto_now=True)
 
-#     def __str__(self):
-#         return f"{self.user} {self.membership_type}"
+MEMBERSHIP_TYPE = (
+     ("Trial", "retailer"),
+    ("dealer", "dealer"),
+    ("customer", "customer"),
+)
+class Membership(models.Model):
+    user = models.OneToOneField(User, related_name = "plan", on_delete=models.CASCADE)
+    membership_type = models.CharField(max_length=100)
+    membership_amount = models.CharField(max_length=25, default=500)
+    membership_payment_id = models.CharField(max_length=100)
+    isPaid = models.BooleanField(default=False)
+    membership_order_date = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user} {self.membership_type}"
 

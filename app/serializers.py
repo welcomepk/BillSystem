@@ -39,7 +39,6 @@ class SilverItemDescSerializer(serializers.Serializer):
         fields = '__all__'
 
 
-
 class GoldSerializer(ModelSerializer):
 
     class Meta:
