@@ -15,15 +15,25 @@ class UserDetails(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk, format = None):
-        
         try:
             user = User.objects.get(id = pk)
             serializer = UserSerializer(user)
             return Response(serializer.data)
         except User.DoesNotExist:
             return Response({"error" : "user does not exists or invalid id"}, status=status.HTTP_400_BAD_REQUEST)
-        
-
+    
+    def patch(self, request, pk, format = None):
+        try:
+            user = User.objects.get(id = pk)
+            serializer = UserSerializer(user, data = request.data, partial = True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response({"error" : "user does not exists or invalid id"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    
 
 def check_user_exists(email):
     if User.objects.filter(email = email).exists():
@@ -66,7 +76,6 @@ class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
 
-
 class SignUpView(APIView):
     permission_classes = (AllowAny,)
     def post(self, request):
@@ -79,7 +88,6 @@ class SignUpView(APIView):
             }
             return Response(data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class RequestPaswordResetEmail(generics.GenericAPIView):
     serializer_class = RequestPaswordResetEmailSerializer
@@ -95,9 +103,7 @@ class RequestPaswordResetEmail(generics.GenericAPIView):
             return Response(f'Good to go {email} successfully sent')
         else:
             return Response({"error" : "mail can not be sent"}, status=status.HTTP_400_BAD_REQUEST)
-            
-
-        
+               
 # class SignUpView(generics.CreateAPIView):
 #   permission_classes = (AllowAny,)
 #   serializer_class = RegisterSerializer

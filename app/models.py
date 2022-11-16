@@ -79,6 +79,7 @@ class Silver(models.Model):
 class Sell(models.Model):
     shop = models.ForeignKey(User, related_name = 'sells', on_delete = models.CASCADE)
     customer = models.ForeignKey(Customer,   related_name='buys', on_delete = models.CASCADE)
+    customer_name = models.CharField(max_length=128)
     gold_items = models.JSONField(default = '{}')
     silver_items = models.JSONField(default = '{}')
     total_amount = models.FloatField()
