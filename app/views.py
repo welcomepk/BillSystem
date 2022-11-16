@@ -441,10 +441,14 @@ class SellingApiView(APIView):
 class PurchaseSaleApiView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def post(self, request):
 
         today = datetime.date.today()
-        year, month, day = request.data.values()
+        
+        year = request.data.get('year')
+        month = request.data.get('month')
+        day = request.data.get('day')
+
         date = datetime.date(int(year), int(month), int(day))
         
         # Mymodel.objects.filter(date_time_field__contains=datetime.date(1986, 7, 28))
