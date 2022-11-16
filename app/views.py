@@ -9,7 +9,7 @@ from .models import Gold, Silver, PurchasedBy, Sell, GoldSilverRate
 from account.models import User, Customer
 from django.db.models.lookups import GreaterThan, LessThan
 from django.db.models import F, Q, When
-from datetime import datetime
+import datetime
 
 
 
@@ -69,7 +69,7 @@ class PurchaseProductApiView(APIView):
             'silveritems': silver_items,
             'gst': request.data.get('gst'),
             'paid_amount': request.data.get('paid_amount'),
-            'created_at': datetime.fromtimestamp(int(request.data.get('timestamp'))),
+            'created_at': request.data.get('created_at'),
         }
         
         purchased_serializer = PurchasedBySerializer(data=purchased_data)
@@ -368,6 +368,7 @@ class ProductSearchApiView(APIView):
             return Response({"error" : "User does not exists"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+# datetime.fromtimestamp(int(request.data.get('timestamp')))
 class SellingApiView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -382,7 +383,7 @@ class SellingApiView(APIView):
             
             
             request.data['shop'] = request.user.id
-            request.data['created_at'] = datetime.fromtimestamp(int(request.data.get('timestamp')))
+            request.data['created_at'] = request.data.get('created_at')
             # request.data.pop('timestamp')
             selling_serializer = SellingSerializer(data = request.data)
             
@@ -434,6 +435,36 @@ class SellingApiView(APIView):
         return Response(request.data)
 
 
+
+# ---------------------  Report  ----------------------
+
+class PurchaseSaleApiView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        today = datetime.date.today()
+        year, month, day = request.data.values()
+        date = datetime.date(int(year), int(month), int(day))
+        
+        # Mymodel.objects.filter(date_time_field__contains=datetime.date(1986, 7, 28))
+                # or if you want to filter between 2 dates
+
+        # MyObject.objects.filter(
+        #     datetime_field__date__range=(datetime.date(2009,8,22), datetime.date(2009,9,22))
+        # )
+        purchases = request.user.purchases.filter(created_at = date)
+        sells = request.user.sells.filter(created_at = date)
+        purchases_serializer = PurchasedBySerializer(purchases, many=True)
+        sells_serializer = SellingSerializer(sells, many=True)
+
+        report = {
+            "purchases" : purchases_serializer.data,
+            "sells" : sells_serializer.data
+        }
+        
+        
+        return Response(report)
 
 
 # --------------------  Invoices ----------------------------
@@ -520,6 +551,11 @@ class PurchaseInvoiceApiView(APIView):
             return Response('plz provide invice_no', status=status.HTTP_400_BAD_REQUEST)
 
 class CustomerInvoiceApiView(APIView):
+
+    def get(self, request, format = None):
+        q = request.GET.get('search', None)
+        item_type = request.GET.get("item_type").lower()
+
 
     def post(self, request, format = None):
         customer_id = request.data.get('id', None)

@@ -3,6 +3,8 @@ from .views import *
 
 
 urlpatterns = [
+    
+    path('purchase-sale/', PurchaseSaleApiView.as_view(), name='invoices'),
     path('invoices/', InvoiceApiView.as_view(), name='invoices'),
     
     path('sell/', SellingApiView.as_view(), name='sell_product'),

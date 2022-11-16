@@ -13,11 +13,11 @@ class PurchasedBy(models.Model):
     golditems = models.JSONField(default = '{}')
     silveritems = models.JSONField(default = '{}')
     # purchased_date = models.DateField(auto_now_add = True, blank = True, null = True)
-    # timestamp = models.DateTimeField(auto_now_add = True)
-    created_at = models.DateTimeField()
+    timestamp = models.DateTimeField(auto_now_add = True)
+    created_at = models.DateField()
 
     def __str__(self):
-        return f"{self.id} => {self.user.first_name} {self.purchased_date}"
+        return f"{self.id} => {self.user.first_name} {self.created_at}"
 
 
 
@@ -35,6 +35,8 @@ class Gold(models.Model):
         on_delete=models.CASCADE
     )
     item_name = models.CharField(max_length = 128)
+    item_type = models.CharField(max_length=20, default='gold')
+
     karet = models.IntegerField()
     gross_wt = models.FloatField( blank = True, null = True)
     net_wt = models.FloatField( blank = True, null = True)
@@ -61,6 +63,7 @@ class Silver(models.Model):
         on_delete=models.CASCADE
     )
     item_name = models.CharField(max_length = 128)
+    item_type = models.CharField(max_length=20, default='silver')
     gross_wt = models.FloatField( blank = True, null = True)
     net_wt = models.FloatField( blank = True, null = True)
     grm_wt = models.FloatField( blank = True, null = True)
@@ -81,7 +84,8 @@ class Sell(models.Model):
     total_amount = models.FloatField()
     paid_amount = models.FloatField()
     gst = models.FloatField()
-    created_at = models.DateTimeField()
+    created_at = models.DateField()
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"from {self.shop} to {self.customer.full_name}"
@@ -106,3 +110,7 @@ class GoldSilverRate(models.Model):
 #     shop_name = models.CharField(max_length = 128)
 #     customer_name = models.CharField(max_length = 128)
 #     timestamp = models.DateTimeField(auto_now = True)
+
+class DateDemo(models.Model):
+    date = models.DateField()
+    datetime = models.DateTimeField(auto_now=True)
