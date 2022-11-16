@@ -19,8 +19,6 @@ class PurchasedBy(models.Model):
     def __str__(self):
         return f"{self.id} => {self.user.first_name} {self.created_at}"
 
-
-
 class Gold(models.Model):
     parchased_by = models.ForeignKey(
         PurchasedBy,
@@ -75,7 +73,6 @@ class Silver(models.Model):
     def __str__(self):
         return f"shop {self.shop} {self.item_name}"
 
-
 class Sell(models.Model):
     shop = models.ForeignKey(User, related_name = 'sells', on_delete = models.CASCADE)
     customer = models.ForeignKey(Customer,   related_name='buys', on_delete = models.CASCADE)
@@ -91,7 +88,6 @@ class Sell(models.Model):
     def __str__(self):
         return f"from {self.shop} to {self.customer.full_name}"
 
-
 class GoldSilverRate(models.Model):
     user = models.OneToOneField(User, on_delete = models.CASCADE, related_name = "goldsilverrates")
     gold_price = models.FloatField(default = 0.0)
@@ -105,7 +101,6 @@ class GoldSilverRate(models.Model):
 
         if created:
             GoldSilverRate.objects.create(user=instance)
-
 
 # class SellHistory(models.Model):
 #     shop_name = models.CharField(max_length = 128)

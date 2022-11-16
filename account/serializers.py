@@ -9,7 +9,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 class UserSerializer(ModelSerializer):
   class Meta:
     model = User
-    fields = ["id", "first_name", "last_name", "email", "shop_name", "phone_no", "address", "date_joined" ]
+    fields = ["id", "first_name", "last_name", "email", "shop_name", "phone_no", "address", "date_joined", "gst_no", "adhaar_no", "pan_no" ]
 
 
 #Serializer to Register User
