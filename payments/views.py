@@ -1,13 +1,13 @@
 import json
-
 import environ
 import razorpay
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from account.models import User
-from .models import Order
-from .serializers import OrderSerializer
+from .models import Order, Membership
+from .serializers import OrderSerializer, MembershipSerializer
+from datetime import datetime, date, timedelta
 
 env = environ.Env()
 
@@ -19,8 +19,8 @@ environ.Env.read_env()
 @api_view(['POST'])
 def start_payment(request):
     # request.data is coming from frontend
-    amount = request.data['amount']
-    name = request.data['name']
+    # amount = request.data['amount']
+    # name = request.data['name']
 
     # setup razorpay client this is the client to whome user is paying money that's you
     client = razorpay.Client(auth=(env('PUBLIC_KEY'), env('SECRET_KEY')))
@@ -29,28 +29,33 @@ def start_payment(request):
     # the amount will come in 'paise' that means if we pass 50 amount will become
     # 0.5 rupees that means 50 paise so we have to convert it in rupees. So, we will 
     # mumtiply it by 100 so it will be 50 rupees.
-    payment = client.order.create({"amount": int(amount) * 100, 
+    payment = client.order.create({"amount": 500 * 100, 
                                    "currency": "INR", 
                                    "payment_capture": "1"})
 
     # we are saving an order with isPaid=False because we've just initialized the order
     # we haven't received the money we will handle the payment succes in next 
     # function
-    user = User.objects.get(email = "hermione@gmail.com")
-    order = None
     try:
-        order = Order.objects.get(user = user)
-        order.order_product = name
-        order.order_amount = amount
-        order.order_payment_id = payment['id']
-        order.save()
-    except Order.DoesNotExist:
-        order = Order.objects.get_or_create(user = user,
-                                    order_product=name, 
-                                    order_amount=amount, 
-                                    order_payment_id=payment['id'])
+        user = User.objects.get(id = request.user.id)
+        # user = User.objects.get(id = 8)
+    except User.DoesNotExist:
+        return Response({"error" : "User does not exists"}, status=status.HTTP_400_BAD_REQUEST)
 
-    serializer = OrderSerializer(order)
+    membership = None
+    try:
+        membership = Membership.objects.get(user = user)
+        # membership.membership_type = 'PRO'
+        # membership.membership_amount = amount
+        membership.membership_payment_id = payment['id']
+        membership.save()
+    except Membership.DoesNotExist:
+        membership = Membership.objects.get_or_create(user = user,
+                                    # order_product=name, 
+                                    # membership_amount=amount, 
+                                    membership_payment_id=payment['id'])
+
+    serializer = MembershipSerializer(membership)
 
     """order response will be 
     {'id': 17, 
@@ -70,6 +75,7 @@ def start_payment(request):
 @api_view(['POST'])
 def handle_payment_success(request):
     # request.data is coming from frontend
+
     res = json.loads(request.data["response"])
 
     """res will be:
@@ -78,7 +84,7 @@ def handle_payment_success(request):
     'razorpay_signature': '76b2accbefde6cd2392b5fbf098ebcbd4cb4ef8b78d62aa5cce553b2014993c0'}
     this will come from frontend which we will use to validate and confirm the payment
     """
-
+    
     ord_id = ""
     raz_pay_id = ""
     raz_signature = ""
@@ -93,7 +99,7 @@ def handle_payment_success(request):
             raz_signature = res[key]
 
     # get order by payment_id which we've created earlier with isPaid=False
-    order = Order.objects.get(order_payment_id=ord_id)
+    order = Membership.objects.get(membership_payment_id=ord_id)
 
     # we will pass this whole data in razorpay client to verify the payment
     data = {
@@ -107,9 +113,21 @@ def handle_payment_success(request):
     # razorpay client if it is "valid" then check will return None
     try:
         check = client.utility.verify_payment_signature(data)
-
+        today = date.today()
         if check:
             order.isPaid = True
+            order.membership_type = 'PRO'
+            order.membership_order_date = date.today()
+            
+            if not order.isNew:
+                if today < order.membership_terminate_date: 
+                    order.membership_terminate_date = order.membership_terminate_date + timedelta(weeks=1)
+                else:
+                    order.membership_terminate_date = order.membership_order_date + timedelta(weeks=1)
+            else:
+                order.isNew = False
+                order.membership_terminate_date = order.membership_order_date + timedelta(weeks=1)
+
             order.save()
             res_data = {
                 'message': 'Payment Successfull.'

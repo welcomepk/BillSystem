@@ -3,6 +3,8 @@ from account.models import User, Customer
 from django.utils import timezone
 from django.dispatch import receiver #add this
 from django.db.models.signals import post_save #add this
+from datetime import timedelta
+
 
 class PurchasedBy(models.Model):
     user = models.ForeignKey(User, related_name = 'purchases',on_delete=models.CASCADE)
@@ -108,5 +110,10 @@ class GoldSilverRate(models.Model):
 #     timestamp = models.DateTimeField(auto_now = True)
 
 class DateDemo(models.Model):
-    date = models.DateField()
+    order_date = models.DateField(blank=True, null=True)
+    terminate_date = models.DateField(blank=True, null=True)
     datetime = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs): 
+        self.terminate_date = self.order_date + timedelta(days=2)
+        super(DateDemo, self).save(*args, **kwargs)       
