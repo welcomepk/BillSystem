@@ -33,7 +33,6 @@ class UserDetails(APIView):
         except User.DoesNotExist:
             return Response({"error" : "user does not exists or invalid id"}, status=status.HTTP_400_BAD_REQUEST)
     
-    
 
 def check_user_exists(email):
     if User.objects.filter(email = email).exists():
@@ -74,7 +73,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
-
 
 class SignUpView(APIView):
     permission_classes = (AllowAny,)

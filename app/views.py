@@ -453,6 +453,7 @@ class PurchaseSaleApiView(APIView):
         # MyObject.objects.filter(
         #     datetime_field__date__range=(datetime.date(2009,8,22), datetime.date(2009,9,22))
         # )
+
         purchases = request.user.purchases.filter(created_at = date)
         sells = request.user.sells.filter(created_at = date)
         purchases_serializer = PurchasedBySerializer(purchases, many=True)
@@ -532,6 +533,24 @@ class SellInvoiceApiView(APIView):
         else:
             return Response('plz provide invice_no', status=status.HTTP_400_BAD_REQUEST)
 
+    def patch(self, request, format = None):
+        invice_no = request.GET.get('invice_no')
+        if invice_no:
+            try:
+                sell_obj = Sell.objects.get(id = invice_no)
+                serializer = SellingSerializer(sell_obj, data = request.data, partial = True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            except PurchasedBy.DoesNotExist:
+                return Response({"error": "Invalid invice no"}, status=status.HTTP_400_BAD_REQUEST)
+            except:
+                return Response({'error' : "unknown error"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'error' : 'plz provide invice_no'}, status=status.HTTP_400_BAD_REQUEST)
+
+
 # Note: invice_no => purchsed_by id(acts as invice_no)
 class PurchaseInvoiceApiView(APIView):
     permission_classes = [IsAuthenticated]
@@ -548,7 +567,26 @@ class PurchaseInvoiceApiView(APIView):
             except:
                 return Response({'error' : "unknown error"}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response('plz provide invice_no', status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error' : 'plz provide invice_no'}, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, format = None):
+        invice_no = request.GET.get('invice_no')
+        if invice_no:
+            try:
+                purchase_user = PurchasedBy.objects.get(id = invice_no)
+                serializer = PurchasedBySerializer(purchase_user, data = request.data, partial = True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            except PurchasedBy.DoesNotExist:
+                return Response({"error": "Invalid invice no"}, status=status.HTTP_400_BAD_REQUEST)
+            except:
+                return Response({'error' : "unknown error"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'error' : 'plz provide invice_no'}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class CustomerInvoiceApiView(APIView):
 
