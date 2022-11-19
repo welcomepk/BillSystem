@@ -11,7 +11,7 @@ class PurchasedBy(models.Model):
     seller_name = models.CharField(max_length = 128)
     total_amount = models.FloatField()  
     paid_amount = models.FloatField()  
-    gst = models.FloatField()
+    gst = models.CharField(max_length=15)
     golditems = models.JSONField(default = '{}')
     silveritems = models.JSONField(default = '{}')
     # purchased_date = models.DateField(auto_now_add = True, blank = True, null = True)
@@ -83,7 +83,7 @@ class Sell(models.Model):
     silver_items = models.JSONField(default = '{}')
     total_amount = models.FloatField()
     paid_amount = models.FloatField()
-    gst = models.FloatField()
+    gst = models.CharField(max_length=15)
     created_at = models.DateField()
     timestamp = models.DateTimeField(auto_now_add=True)
 

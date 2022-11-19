@@ -60,7 +60,7 @@ class Customer(models.Model):
 
 class ForgotPasswordToken(models.Model):
     user = models.OneToOneField(User, on_delete = models.CASCADE)
-    token = models.CharField(max_length = 128)
+    token = models.CharField(max_length = 128, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add = True)
 
     def __str__(self):

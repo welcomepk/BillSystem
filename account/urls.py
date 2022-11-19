@@ -1,6 +1,5 @@
 from django.urls import path
-from .views import SignUpView, MyTokenObtainPairView, is_exists, RequestPaswordResetEmail, UserDetails
-
+from .views import *
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
@@ -14,5 +13,7 @@ urlpatterns = [
 
     # forgot password
     path('forgot-password/email/', RequestPaswordResetEmail.as_view(), name='forgot-password-email'),
+    path('forgot-password/<token>/', change_password_confirm, name='forgot-password-confirm'),
+    path('forgot-password/success/<name>/', change_password_success, name='forgot-password-success'),
     
 ]

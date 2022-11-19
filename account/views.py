@@ -1,4 +1,6 @@
-from .models import User
+from django.shortcuts import render, redirect
+from .models import User, ForgotPasswordToken
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -10,6 +12,7 @@ from rest_framework import status, generics
 from rest_framework.decorators import api_view
 from .helpers import send_forget_password_mail
 from app.models import GoldSilverRate
+import uuid
 
 class UserDetails(APIView):
     permission_classes = [IsAuthenticated]
@@ -87,6 +90,51 @@ class SignUpView(APIView):
             return Response(data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+def change_password_success(request, name):
+        return render(request, 'change-password-success.html', context={"name" : name})
+
+def change_password_confirm(request, token):
+    context = {}
+    error = None
+    if request.method == 'POST':
+        try:
+            user_token = ForgotPasswordToken.objects.get(token = token)
+            user = user_token.user
+            password = request.POST.get('password', None)
+            re_password = request.POST.get('re-password', None)
+            if password and re_password:
+                if password == re_password:
+                    user.set_password(password)
+                    user.save()
+                    return redirect('forgot-password-success', name = user.first_name)
+                else:
+                    error = "Both password fields should match"
+            else:
+                error = "Both fiels are required"
+            context = {
+                "error" : error
+            }
+            return render(request, 'change-password.html', context=context)
+            
+        except ForgotPasswordToken.DoesNotExist:
+            return render(request, 'invalid-token.html')
+
+    return render(request, 'change-password.html')
+
+    context = {}
+    if request.method == "POST":
+        error = "Both password fields should match"
+        password = request.POST.get('password')
+        re_password = request.POST.get('re-password')
+        print(password, re_password)
+        context = {
+           "password" : password
+        }
+    return render(request, 'change-password.html', context=context)
+    
+
+
 class RequestPaswordResetEmail(generics.GenericAPIView):
     serializer_class = RequestPaswordResetEmailSerializer
 
@@ -94,14 +142,24 @@ class RequestPaswordResetEmail(generics.GenericAPIView):
         print("user id ", request.user)
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-
+        token = str(uuid.uuid4())
         email = request.data.get('email')
-        status = send_forget_password_mail("kamblepk020@gmail.com")
-        if status:
-            return Response(f'Good to go {email} successfully sent')
-        else:
-            return Response({"error" : "mail can not be sent"}, status=status.HTTP_400_BAD_REQUEST)
-               
+        try:
+            user = User.objects.get(email = email)
+            forgot_password_token, created = ForgotPasswordToken.objects.get_or_create(user = user)
+            forgot_password_token.token = token
+            forgot_password_token.save()
+            mail_status = send_forget_password_mail(email="kamblepk020@gmail.com", token = token)
+            if mail_status:
+                return Response(f'Good to go {email} successfully sent')
+            else:
+                return Response({"error" : "mail can not be sent"}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:   
+            return Response({'error' : "User does not exists with this email"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(e)
+            return Response({"error" : "unkown error at RequestPaswordResetEmail"}, status=status.HTTP_400_BAD_REQUEST)
+
 # class SignUpView(generics.CreateAPIView):
 #   permission_classes = (AllowAny,)
 #   serializer_class = RegisterSerializer
