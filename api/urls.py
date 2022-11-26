@@ -5,19 +5,21 @@ from rest_framework_simplejwt.views import (
 )
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def getRoutes(request):
     print(request.method)
+    import os
+    
     routes = [
         '/api/account/login/',
         '/api/account/login/refresh/',
-
-        '/api/app/sell/'
-        '/api/app/purchase/'
+        '/api/app/sell/',
+        '/api/app/purchase/',
+        {'server_type' : os.environ.get('DJANGO_SETTINGS_MODULE')}
     ]
     return Response(routes)
 
