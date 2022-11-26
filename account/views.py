@@ -14,17 +14,32 @@ from .helpers import send_forget_password_mail
 from app.models import GoldSilverRate
 import uuid
 
+
+
+
 class UserDetails(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk, format = None):
         try:
-            user = User.objects.get(id = pk)
+            user = request.user
+            if user.plan.has_membership():
+                user.has_membership = True
+                user.plan.membership_type = "PRO"
+                user.plan.save()
+                user.save()
+                print(f"{user} has membership")
+            else:
+                user.has_membership = False
+                user.plan.membership_type = "NONE"
+                user.plan.save()
+                user.save()
             serializer = UserSerializer(user)
             return Response(serializer.data)
         except User.DoesNotExist:
             return Response({"error" : "user does not exists or invalid id"}, status=status.HTTP_400_BAD_REQUEST)
     
+
     def patch(self, request, pk, format = None):
         try:
             user = User.objects.get(id = pk)
@@ -66,6 +81,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
                 "email" : user.email,
                 "shop_name" : user.shop_name,
                 "phone_no" : user.phone_no,
+                "has_membership" : user.has_membership,
             },
             "gold_price" : gold_price,
             "silver_price" : silver_price,
@@ -149,7 +165,7 @@ class RequestPaswordResetEmail(generics.GenericAPIView):
             forgot_password_token, created = ForgotPasswordToken.objects.get_or_create(user = user)
             forgot_password_token.token = token
             forgot_password_token.save()
-            mail_status = send_forget_password_mail(email="kamblepk020@gmail.com", token = token)
+            mail_status = send_forget_password_mail(email=email, token = token)
             if mail_status:
                 return Response(f'Good to go {email} successfully sent')
             else:

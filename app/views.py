@@ -13,7 +13,6 @@ from django.db.models import F, Q, When
 import datetime
 
 
-
 class GoldSilverRateApiView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -590,7 +589,6 @@ class PurchaseInvoiceApiView(APIView):
                 return Response({'error' : "unknown error"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({'error' : 'plz provide invice_no'}, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class CustomerInvoiceApiView(APIView):

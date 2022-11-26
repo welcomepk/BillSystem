@@ -1,7 +1,8 @@
 import json
 import environ
 import razorpay
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from account.models import User
@@ -17,6 +18,7 @@ environ.Env.read_env()
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def start_payment(request):
     # request.data is coming from frontend
     # amount = request.data['amount']
@@ -129,6 +131,10 @@ def handle_payment_success(request):
                 order.membership_terminate_date = order.membership_order_date + timedelta(weeks=1)
 
             order.save()
+            print("ordered user => ", order.user)
+            order.user.is_active = True
+            order.user.has_membership = True
+            order.user.save()
             res_data = {
                 'message': 'Payment Successfull.'
             }
