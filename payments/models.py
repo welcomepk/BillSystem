@@ -62,7 +62,6 @@ class Membership(models.Model):
             return today < self.membership_terminate_date and self.isPaid 
         return False
 
-
     @receiver(post_save, sender=User) #add this
     def create_membership(sender, instance, created, **kwargs):
         if created:
