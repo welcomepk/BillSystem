@@ -381,7 +381,6 @@ class SellingApiView(APIView):
             silver_items = request.data.get("silver_items")
             yet_to_save = []
             
-            
             request.data['shop'] = request.user.id
             request.data['created_at'] = request.data.get('created_at')
             # request.data.pop('timestamp')

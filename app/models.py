@@ -84,6 +84,11 @@ class Sell(models.Model):
     total_amount = models.FloatField()
     paid_amount = models.FloatField()
     gst = models.CharField(max_length=15)
+    wastage = models.FloatField()
+    fine = models.FloatField()
+    fine_weight = models.FloatField()
+    rate = models.FloatField()
+    majuri = models.FloatField()
     created_at = models.DateField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
