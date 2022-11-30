@@ -89,6 +89,7 @@ class Sell(models.Model):
     silver_items = models.JSONField(default = '{}')
     total_amount = models.FloatField()
     paid_amount = models.FloatField()
+    discount = models.FloatField(default=0.0)
     gst = models.CharField(max_length=15)
     created_at = models.DateField()
     timestamp = models.DateTimeField(auto_now_add=True)
