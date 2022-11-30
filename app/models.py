@@ -43,6 +43,9 @@ class Gold(models.Model):
     grm_wt = models.FloatField( blank = True, null = True)
     stone_wt = models.FloatField( blank = True, null = True)
     fine_wt = models.FloatField( blank = True, null = True)
+    wastage = models.FloatField(blank = True, null = True)
+    fine = models.FloatField(blank = True, null = True)
+    majuri = models.FloatField(blank = True, null = True)
     price = models.FloatField()
     qty = models.IntegerField()
 
@@ -69,6 +72,9 @@ class Silver(models.Model):
     grm_wt = models.FloatField( blank = True, null = True)
     stone_wt = models.FloatField( blank = True, null = True)
     fine_wt = models.FloatField( blank = True, null = True)
+    wastage = models.FloatField(blank = True, null = True)
+    fine = models.FloatField(blank = True, null = True)
+    majuri = models.FloatField(blank = True, null = True)
     price = models.FloatField()
     qty = models.IntegerField()
     
@@ -84,11 +90,6 @@ class Sell(models.Model):
     total_amount = models.FloatField()
     paid_amount = models.FloatField()
     gst = models.CharField(max_length=15)
-    wastage = models.FloatField()
-    fine = models.FloatField()
-    fine_weight = models.FloatField()
-    rate = models.FloatField()
-    majuri = models.FloatField()
     created_at = models.DateField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
