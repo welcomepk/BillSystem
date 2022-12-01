@@ -396,10 +396,10 @@ class SellingApiView(APIView):
                             return Response({"error" : f"Stock of this item has been empty"}, status=status.HTTP_400_BAD_REQUEST)
                         if int(gold_item['qty']) > gold.qty:
                             return Response({"error" : f"quantity({gold_item['qty']}) is larger than available stocks in GOLD items for id={gold_item.get('id')}"}, status=status.HTTP_400_BAD_REQUEST)
-                        gold.wastage = gold_item.get('wastage', '')
-                        gold.fine = gold_item.get('fine', '')
-                        gold.fine_wt = gold_item.get('fine_wt', '')
-                        gold.fine_wt = gold_item.get('fine_wt', '')
+                        gold.wastage = gold_item.get('wastage', 0.0)
+                        gold.fine = gold_item.get('fine', 0.0)
+                        gold.fine_wt = gold_item.get('fine_wt', 0.0)
+                        gold.fine_wt = gold_item.get('fine_wt', 0.0)
                         gold.qty = gold.qty - gold_item['qty']
                         yet_to_save.append(gold)
                     except Gold.DoesNotExist:
