@@ -2,6 +2,10 @@ from enum import unique
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from .manager import UserManager
+from django.utils.translation import gettext_lazy as _
+from .storage import OverwriteStorage
+import os
+
 
 class Address(models.Model):
     state = models.CharField(max_length = 40)
@@ -41,7 +45,6 @@ class User(AbstractUser):
     def get_silver_items(self):
        return self.silver.all()
 
-
 class Customer(models.Model):
     
     shop = models.ForeignKey(User, related_name = "customers", on_delete=models.CASCADE)
@@ -59,19 +62,51 @@ class Customer(models.Model):
     def __str__(self):
         return self.email
 
+# class Tokens(models.Model):
+#     token = models.CharField(max_length = 128, null=True, blank=True)
+#     created_at = models.DateTimeField(auto_now_add = True)
+
+#     class Meta:
+#         abstraction = True
+
+#     def __str__(self):
+#         return f"{self.user} ({self.token})"
+
 class ForgotPasswordToken(models.Model):
-    user = models.OneToOneField(User, on_delete = models.CASCADE)
+    user = models.OneToOneField(User, related_name="forgot_password_token", on_delete = models.CASCADE)
     token = models.CharField(max_length = 128, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add = True)
-
     def __str__(self):
         return f"{self.user} ({self.token})"
 
-# class Profile(models.Model):
-#     user = models.OneToOneField(User, on_delete = models.CASCADE)
-#     avatar = 
+
+class EmailVerificationToken(models.Model):
+    user = models.OneToOneField(User, related_name="email_verification_token", on_delete = models.CASCADE)
+    token = models.CharField(max_length = 128, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add = True)
+    def __str__(self):
+        return f"{self.user} ({self.token})"
 
 
-# class Profile(models.Model):
-#     user = models.OneToOneField(User, related_name='profile', on_delete=models.CASCADE)
-#     avatar = models.ImageField(default='default_avatar.jpg')
+def upload_avatar(instance, file_name):
+  
+    return os.path.join('avatars', str(instance.user.id), file_name)
+    # print("instance in upload file => ", instance.user.id)
+    # if instance:
+    #     return f"avatars/{file_name}_{instance.user.id}"
+    # return f"avatars/{file_name}"
+
+
+def upload_to(instance, file_name):
+    print("instance in upload file => ", instance.user.id)
+    if instance:
+        return f"avatars/{file_name}_{instance.user.id}"
+    return f"avatars/{file_name}"
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete = models.CASCADE)
+    avatar = models.ImageField(_("Avatar"), max_length=300,  storage=OverwriteStorage(), upload_to=upload_avatar, default='avatars/default.png')
+    is_verified = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"profile : {self.user.email}"

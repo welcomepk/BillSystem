@@ -15,5 +15,8 @@ urlpatterns = [
     path('forgot-password/email/', RequestPaswordResetEmail.as_view(), name='forgot-password-email'),
     path('forgot-password/<token>/', change_password_confirm, name='forgot-password-confirm'),
     path('forgot-password/success/<name>/', change_password_success, name='forgot-password-success'),
+
+    # membership
+    path('has-membership/', has_membership, name="has-membership"),
     
 ]

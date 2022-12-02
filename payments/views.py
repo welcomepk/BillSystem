@@ -121,14 +121,21 @@ def handle_payment_success(request):
             order.membership_type = 'PRO'
             order.membership_order_date = date.today()
             
-            if not order.isNew:
-                if today < order.membership_terminate_date: 
+            # if not order.isNew:
+            #     if today < order.membership_terminate_date: 
+            #         order.membership_terminate_date = order.membership_terminate_date + timedelta(weeks=1)
+            #     else:
+            #         order.membership_terminate_date = order.membership_order_date + timedelta(weeks=1)
+            # else:
+            #     order.isNew = False
+            #     order.membership_terminate_date = order.membership_order_date + timedelta(weeks=1)
+
+            if today < order.membership_terminate_date: 
                     order.membership_terminate_date = order.membership_terminate_date + timedelta(weeks=1)
-                else:
-                    order.membership_terminate_date = order.membership_order_date + timedelta(weeks=1)
             else:
-                order.isNew = False
                 order.membership_terminate_date = order.membership_order_date + timedelta(weeks=1)
+            if order.isNew:
+                order.isNew = False
 
             order.save()
             print("ordered user => ", order.user)

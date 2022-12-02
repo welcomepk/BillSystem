@@ -2,9 +2,9 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
-from .models import User, Customer
+from .models import User, Customer, Profile
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-
+from payments.models import Membership
 
 class UserSerializer(ModelSerializer):
   class Meta:
@@ -43,7 +43,6 @@ class RegisterSerializer(ModelSerializer):
       'address': {'required': True},
       'pincode': {'required': True},
       'user_type': {'required': True},
-      
     }
 
   def validate(self, attrs):
@@ -73,8 +72,13 @@ class RegisterSerializer(ModelSerializer):
     user.save()
     return user
 
+class ProfileSerializer(ModelSerializer):
 
+  class Meta:
+    model = Profile
+    fields = "__all__"
 
+    
 class CustomerSerializer(ModelSerializer):
     class Meta:
       model = Customer
@@ -93,3 +97,10 @@ class RequestPaswordResetEmailSerializer(serializers.Serializer):
           return super().validate(attrs)
         else:
           raise serializers.ValidationError("Invalid email address")
+
+
+class MembershipSerializer(serializers.ModelSerializer):
+
+    class Meta:
+      model = Membership
+      fields = "__all__"

@@ -14,8 +14,6 @@ class Order(models.Model):
     def __str__(self):
         return self.order_product
 
-
-
 TRIAL = "TRIAL"
 PRO = "PRO"
 NONE = "NONE"
@@ -58,6 +56,9 @@ class Membership(models.Model):
 
     def has_membership(self):
         today = date.today()
+        if self.isNew:
+            return today <= self.membership_terminate_date
+
         if self.membership_terminate_date and self.membership_order_date:
             return today < self.membership_terminate_date and self.isPaid 
         return False
@@ -65,4 +66,4 @@ class Membership(models.Model):
     @receiver(post_save, sender=User) #add this
     def create_membership(sender, instance, created, **kwargs):
         if created:
-            Membership.objects.create(user=instance)
+            Membership.objects.create(user=instance, membership_terminate_date = date.today() + timedelta(days=90))

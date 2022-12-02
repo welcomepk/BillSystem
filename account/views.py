@@ -1,20 +1,36 @@
 from django.shortcuts import render, redirect
 from .models import User, ForgotPasswordToken
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics
-from .serializers import UserSerializer, RegisterSerializer, RequestPaswordResetEmailSerializer
+from .serializers import UserSerializer, RegisterSerializer, RequestPaswordResetEmailSerializer, MembershipSerializer
 from rest_framework import status, generics
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from .helpers import send_forget_password_mail
 from app.models import GoldSilverRate
 import uuid
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def has_membership(request):    
+    user_membership = request.user.plan
+    serializer = MembershipSerializer(user_membership)
+    if request.user.has_membership:
+        if not user_membership.has_membership():
+            user_membership.membership_type = 'NONE'
+            user_membership.save()
+            request.user.has_membership = False
+            request.user.is_active = False
+            request.user.save()
+            return Response({'has_membership': False, 'details' : serializer.data})
+        return Response({'has_membership': True, 'details' : serializer.data})
+    else:
+        return Response({'has_membership': False, 'details' : serializer.data})
+    return Response("good to go") 
 
 
 class UserDetails(APIView):
@@ -123,6 +139,7 @@ def change_password_confirm(request, token):
                 if password == re_password:
                     user.set_password(password)
                     user.save()
+                    user_token.delete()
                     return redirect('forgot-password-success', name = user.first_name)
                 else:
                     error = "Both password fields should match"
@@ -149,7 +166,6 @@ def change_password_confirm(request, token):
         }
     return render(request, 'change-password.html', context=context)
     
-
 
 class RequestPaswordResetEmail(generics.GenericAPIView):
     serializer_class = RequestPaswordResetEmailSerializer
