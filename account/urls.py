@@ -19,4 +19,7 @@ urlpatterns = [
     # membership
     path('has-membership/', has_membership, name="has-membership"),
     
+    # verification email
+    path("verify-email/email/", send_verification_email, name="verify-email"),
+    path("verify-email/token/", verify_email, name="verify-email-token"),
 ]

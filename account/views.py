@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import User, ForgotPasswordToken
+from .models import User, ForgotPasswordToken, EmailVerificationToken
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -55,7 +55,6 @@ class UserDetails(APIView):
         except User.DoesNotExist:
             return Response({"error" : "user does not exists or invalid id"}, status=status.HTTP_400_BAD_REQUEST)
     
-
     def patch(self, request, pk, format = None):
         try:
             user = User.objects.get(id = pk)
@@ -108,6 +107,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
 
 class SignUpView(APIView):
     permission_classes = (AllowAny,)
@@ -192,6 +192,34 @@ class RequestPaswordResetEmail(generics.GenericAPIView):
             print(e)
             return Response({"error" : "unkown error at RequestPaswordResetEmail"}, status=status.HTTP_400_BAD_REQUEST)
 
+
 # class SignUpView(generics.CreateAPIView):
 #   permission_classes = (AllowAny,)
 #   serializer_class = RegisterSerializer
+
+
+@api_view(['POST'])
+def send_verification_email(request):
+    return Response(f"{request.data}")
+
+@api_view(['POST'])
+def verify_email(request):
+    token = request.data.get('token', None)
+    email = request.data.get('email', None)
+    if token and email:
+        try:
+            token_to_check = EmailVerificationToken.objects.get(token = token)
+
+            if token_to_check.user.email == email:
+                token_to_check.user.profile.is_verified = True
+                token_to_check.user.profile.save()
+                token_to_check.delete()
+                return Response(f"{token_to_check.user.email} is verified successfully")
+            return Response({"error" : "Invalid creidentials with the provided token"}, status=status.HTTP_400_BAD_REQUEST)
+        except EmailVerificationToken.DoesNotExist:
+            return Response({"error" : "invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(e)
+            return Response({"error" : "facing some tech issues"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response({"error" : "both fields email and token are required"}, status=status.HTTP_400_BAD_REQUEST)
