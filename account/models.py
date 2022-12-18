@@ -44,6 +44,9 @@ class User(AbstractUser):
     @property
     def get_silver_items(self):
        return self.silver.all()
+    
+    def is_verified(self):
+        return self.profile.is_verified
 
 class Customer(models.Model):
     

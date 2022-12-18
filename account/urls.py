@@ -9,7 +9,8 @@ urlpatterns = [
     path('login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('signup/', SignUpView.as_view()),
     path('exists/', is_exists, name='is_exists'),
-    path('user/<int:pk>/', UserDetails.as_view(), name='is_exists'),
+    # path('user/<int:pk>/', UserDetails.as_view(), name='is_exists'),
+    path('user/', UserDetails.as_view(), name='is_exists'),
 
     # forgot password
     path('forgot-password/email/', RequestPaswordResetEmail.as_view(), name='forgot-password-email'),
@@ -22,4 +23,6 @@ urlpatterns = [
     # verification email
     path("verify-email/email/", send_verification_email, name="verify-email"),
     path("verify-email/token/", verify_email, name="verify-email-token"),
+
+    path('is_verified/', is_verified, name="is-verified"),
 ]

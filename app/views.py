@@ -514,6 +514,9 @@ class SellInvoiceApiView(APIView):
         if invice_no:
             try:
                 sell_obj = Sell.objects.get(id = invice_no)
+                if sell_obj.shop.id is not request.user.id:
+                    return Response({"error": "Invalid invoice no"}, status=status.HTTP_400_BAD_REQUEST)
+
                 # gold_items = []
                 # silver_items = []
                 
@@ -534,11 +537,12 @@ class SellInvoiceApiView(APIView):
 
                 return Response(SellingSerializer(sell_obj).data)
             except Sell.DoesNotExist:
-                return Response({"error": "Invalid invice no"}, status=status.HTTP_400_BAD_REQUEST)
-            except:
+                return Response({"error": "Invalid invoice no"}, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                print(e)
                 return Response({'error' : "unknown error"}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response('plz provide invice_no', status=status.HTTP_400_BAD_REQUEST)
+            return Response('plz provide invoice_no', status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, format = None):
         invice_no = request.GET.get('invice_no')

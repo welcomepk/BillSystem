@@ -37,3 +37,7 @@ def send_verification_email(instance, token):
     except:
         return False
     return True
+
+
+def is_user_verified(user):
+    return user.profile.is_verified

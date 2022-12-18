@@ -9,7 +9,7 @@ from rest_framework import generics
 from .serializers import UserSerializer, RegisterSerializer, RequestPaswordResetEmailSerializer, MembershipSerializer
 from rest_framework import status, generics
 from rest_framework.decorators import api_view, permission_classes
-from .helpers import send_forget_password_mail
+from .helpers import send_forget_password_mail, is_user_verified
 from app.models import GoldSilverRate
 import uuid
 
@@ -36,7 +36,7 @@ def has_membership(request):
 class UserDetails(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, pk, format = None):
+    def get(self, request, format = None):
         try:
             user = request.user
             if user.plan.has_membership():
@@ -171,13 +171,20 @@ class RequestPaswordResetEmail(generics.GenericAPIView):
     serializer_class = RequestPaswordResetEmailSerializer
 
     def post(self, request):
-        print("user id ", request.user)
+
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         token = str(uuid.uuid4())
         email = request.data.get('email')
         try:
             user = User.objects.get(email = email)
+            if not is_user_verified(user):
+
+                return Response({
+                            "detail": "User is not verified",
+                            "code": "user_not_verified"
+                        }, status=status.HTTP_400_BAD_REQUEST)
+
             forgot_password_token, created = ForgotPasswordToken.objects.get_or_create(user = user)
             forgot_password_token.token = token
             forgot_password_token.save()
@@ -200,6 +207,11 @@ class RequestPaswordResetEmail(generics.GenericAPIView):
 
 @api_view(['POST'])
 def send_verification_email(request):
+
+    # token = random.randint(999, 9999)
+    # if send_verification_email(instance=instance, token=token):
+    #     print("email has not been sent yet")
+    #     EmailVerificationToken.objects.create(user = request.user, token = token)
     return Response(f"{request.data}")
 
 @api_view(['POST'])
@@ -223,3 +235,8 @@ def verify_email(request):
             return Response({"error" : "facing some tech issues"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response({"error" : "both fields email and token are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def is_verified(request):
+    return Response({"is_verified" : request.user.is_verified()})
